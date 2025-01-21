@@ -340,6 +340,11 @@ function FileIO.save(
     F = filetype(file)
     mime = format2mime(F)
 
+    #If screen visible, get current px_per_unit
+    if isvisible(getscreen(fig.scene)) && hasproperty(getscreen(fig.scene),:px_per_unit)
+        current_px_per_unit = getscreen(fig.scene).px_per_unit[]
+    end
+
     try
         return open(filename, "w") do io
             # If the scene already got displayed, we get the current screen its displayed on
@@ -351,6 +356,10 @@ function FileIO.save(
             screen = getscreen(backend, scene, config, io, mime)
             events(fig).tick[] = Tick(OneTimeRenderTick, 0, 0.0, 0.0)
             backend_show(screen, io, mime, scene)
+            if isvisible(getscreen(fig.scene)) && hasproperty(getscreen(fig.scene),:px_per_unit)  #if screen visible, reset px_per_unit
+                screen.px_per_unit[] = current_px_per_unit
+            end
+            nothing
         end
     catch e
         # So, if open(io-> error(...), "w"), the file will get created, but not removed...
